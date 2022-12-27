@@ -5,9 +5,7 @@ const appExpress = express();
 const PORT = Math.floor(Math.random() * (5000 - 3000 + 1)) + 3000;
 const router = require('./router');
 const handlebars = require('express-handlebars');
-const db = require('./config/db');
 const methodOverride = require('method-override');
-const cookieParser = require('cookie-parser');
 const { app, BrowserWindow } = require('electron')
 
 // Fix memory leak
@@ -66,9 +64,6 @@ appExpress.use(express.urlencoded({
     extended: true
 }));
 appExpress.use(express.json());
-
-//Lấy dữ liệu từ Cookie
-appExpress.use(cookieParser())
 
 //Router init
 router(appExpress);
