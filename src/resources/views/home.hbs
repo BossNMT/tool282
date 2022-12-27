@@ -1,0 +1,203 @@
+<div class="col-sm-12">
+  <b>* List User|Password: </b><br />
+  <textarea id="listUser" rows="6" placeholder="List Cokie" class="form-control"></textarea><br />
+  <b>*Dấu phân cách: </b><br />
+  <input id="dauphancach" placeholder="" class="form-control"><br />
+  <b>*Proxy: <b id="proxyView" style="color: red; font-weight: bold;">Proxy 1</b> </b><br />
+  <input id="listProxy" placeholder="" class="form-control"><br />
+</div>
+</div>
+
+<div class="col-sm-12">
+  <div class="hr-line-dashed"></div>
+  <div class="text-left">
+    <a class="btn btn-success" id="start">
+      Start
+    </a>
+
+  </div>
+  <center>
+    <h1 id="trangthai">Chuẩn Bị</h1>
+  </center>
+
+  <div class="panel-body">
+    <div class="col-md-12">
+      <div class="col-sm-12">
+        <b>* List LIVE:</b><br />
+        <textarea rows="3" class="form-control" id="listLive"></textarea><br />
+      </div>
+      <div class="col-sm-12">
+        <b>* List DIE</b><br />
+        <textarea rows="3" class="form-control" id="listDie"></textarea><br />
+      </div>
+    </div><br />
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"
+    integrity="sha512-odNmoc1XJy5x1TMVMdC7EMs3IVdItLPlCeL5vSUPN2llYKMJ2eByTTAIiiuqLg+GdNr9hF6z81p27DArRFKT7A=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('#start').click(() => {
+        dauphancach = $('#dauphancach').val()
+        listUser = $('#listUser').val().split('\n');
+        keyProxy = $('#listProxy').val()
+        socondachay = 0;
+        $("#socondachay").text(socondachay);
+        $('#trangthai').text('Đang Chạy')
+        const arrayListUser = listUser.chunk(5)
+
+        let indexLoop = 0
+        let indexProxy = 0
+        let proxy
+
+        const loopArrayListUser = () => {
+          if (indexLoop < arrayListUser.length) {
+            indexProxy = indexProxy + arrayListUser[indexLoop].length
+            if (indexProxy > 50) {
+              // get proxy mới
+              getNewProxy(keyProxy, (msgNewProxy) => {
+                if (msgNewProxy.code == 0) {
+                  proxy = msgNewProxy.data.https
+
+                  $.each(arrayListUser[indexLoop], (indexUser, valueUser) => {
+                    $.post('/handle', {
+                      valueUser: valueUser,
+                      proxy: proxy,
+                      dauphancach: dauphancach
+                    }).done(msg => {
+                      if (msg.success) {
+                        $('#listLive').append(msg.user + '\n');
+                      } else {
+                        $('#listDie').append(msg.user + '\n');
+                      }
+                    })
+
+                    if (indexUser + 1 == arrayListUser[indexLoop].length) {
+                      setTimeout(() => {
+                        indexLoop++
+                        loopArrayListUser()
+                      }, 10000)
+                    }
+                  })
+                } else {
+                  $.each(arrayListUser[indexLoop], (indexUser, valueUser) => {
+                    $.post('/handle', {
+                      valueUser: valueUser,
+                      proxy: proxy,
+                      dauphancach: dauphancach
+                    }).done(msg => {
+                      if (msg.success) {
+                        $('#listLive').append(msg.user + '\n');
+                      } else {
+                        $('#listDie').append(msg.user + '\n');
+                      }
+                    })
+
+                    if (indexUser + 1 == arrayListUser[indexLoop].length) {
+                      setTimeout(() => {
+                        indexLoop++
+                        loopArrayListUser()
+                      }, 10000)
+                    }
+                  })
+                }
+              })
+              console.log('proxy new', indexProxy);
+              // proxy = indexProxy
+              indexProxy = 0
+
+            } else {
+              console.log('proxy', indexProxy);
+              $.each(arrayListUser[indexLoop], (indexUser, valueUser) => {
+                $.post('/handle', {
+                  valueUser: valueUser,
+                  proxy: proxy,
+                  dauphancach: dauphancach
+                }).done(msg => {
+                  if (msg.success) {
+                    $('#listLive').append(msg.user + '\n');
+                  } else {
+                    $('#listDie').append(msg.user + '\n');
+                  }
+                })
+
+                if (indexUser + 1 == arrayListUser[indexLoop].length) {
+                  setTimeout(() => {
+                    indexLoop++
+                    loopArrayListUser()
+                  }, 10000)
+                }
+              })
+            }
+          } else {
+            setTimeout(() => {
+              toastr.success('Đã chạy xong tất cả', 'NMT');
+              $('#trangthai').text('Hoàn Thành!')
+            }, 10000)
+          }
+        }
+
+        // get Proxy lần đầu tiên và lưu lại
+        getNewProxy(keyProxy, (msgNewProxy) => {
+          if (msgNewProxy.code == 0) {
+            proxy = msgNewProxy.data.https
+            loopArrayListUser();
+          } else {
+            getProxy(keyProxy, (msgProxy) => {
+              if (msgProxy.code == 0) {
+                proxy = msgProxy.data.https
+                loopArrayListUser();
+              } else {
+                toastr.error('Key proxy bị lỗi không call dc dữ liệu', 'Proxy');
+              }
+            })
+          }
+        })
+      })
+    })
+
+    Array.prototype.chunk = function (n) {
+      if (!this.length) {
+        return [];
+      }
+      return [this.slice(0, n)].concat(this.slice(n).chunk(n));
+    };
+
+    const checkIndexProxy = (indexLoop, listProxyLength) => {
+      if (indexLoop < listProxyLength) {
+        return indexLoop
+      } else {
+        return indexLoop % listProxyLength
+      }
+    }
+
+    const getProxy = (key, callback) => {
+      $.ajax({
+        type: 'POST',
+        url: 'https://tmproxy.com/api/proxy/get-current-proxy',
+        data: JSON.stringify({ "api_key": key }),
+        dataType: 'JSON'
+      }).done(msg => {
+        callback(msg)
+      })
+    }
+
+    const getNewProxy = (key, callback) => {
+      $.ajax({
+        type: 'POST',
+        url: 'https://tmproxy.com/api/proxy/get-new-proxy',
+        data: JSON.stringify({
+          "api_key": key,
+          "sign": "string",
+          "id_location": 0
+        }),
+        dataType: 'JSON'
+      }).done(msg => {
+        callback(msg)
+      })
+    }
+  </script>

@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+
+  <title>Share Groups </title>
+  <link rel='stylesheet' href='http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css' />
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css' />
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.css' />
+
+  <link rel="icon" href="https://i.imgur.com/6L0LOAu.png" type="image/gif" sizes="16x16">
+</head>
+
+<body>
+  <h1></h1>
+
+  <span id="thanh"></span>
+  <div class="col-sm-12">
+    <b>* List Token:</b><br>
+    <textarea id="listToken" rows="6" placeholder="List Tokens" class="form-control"></textarea><br>
+    <b>* List Messages: @icon @icon @icon @icon @icon @icon @icon</b><br>
+    <textarea id="messages" rows="6" placeholder="NMT @icon" class="form-control"></textarea><br>
+    <b>* CMT: @icon @icon @icon @icon @icon @icon @icon</b><br>
+    <textarea id="cmt" rows="6" placeholder="NMT @icon" class="form-control"></textarea><br>
+    <div class="col-sm-4">
+      <b>* List Link:</b><br>
+      <textarea rows="10" class="form-control" id="listLink" placeholder="Link"></textarea><br>
+    </div>
+    <div class="col-sm-4">
+      <b>* Limit Groups:</b><br>
+
+      <input class="form-control" id="limitGroup" value="12"><br>
+    </div>
+    <div class="col-sm-4">
+      <b>* Get Posts:</b><br>
+
+      <input class="form-control" id="getPost" value="10"><br>
+    </div>
+    <div class="col-sm-4">
+      <b>* Luồng:</b><br>
+
+      <input class="form-control" id="luong" value="5"><br>
+    </div>
+    <div class="col-sm-4">
+      <b>* Delay Luồng:</b><br>
+
+      <input class="form-control" id="delayLuong" value="10000"><br>
+    </div>
+    <div class="col-sm-4">
+      <b>* Giới hạn thất bại</b><br>
+
+      <input class="form-control" id="gioihanthatbai" value="5"><br>
+    </div>
+  </div>
+
+
+  <div class="col-sm-12">
+    <div class="hr-line-dashed"></div>
+    <div class="text-left">
+      <a class="btn btn-success" id="checkLive_ChiaGroups">
+        Check Live && GET Groups
+      </a>
+
+      <a class="btn btn-danger" disabled id="postGR">
+        Start Post GR
+      </a>
+
+      <a class="btn btn-danger" disabled id="editGR">
+        Start Edit GR
+      </a>
+
+      <a class="btn btn-danger" id="cmtGR">
+        Start POST AND CMT GR
+      </a>
+
+      <a class="btn btn-danger" id="shareVideo">
+        Share Video
+      </a>
+
+      <a class="btn btn-success" disabled id="reload">
+        Reload
+      </a>
+
+
+
+
+    </div>
+
+    <audio id="myAudio">
+      <source src="http://webcoban.vn/file/bell.mp3" type="audio/mpeg">
+    </audio>
+    <div class="panel-body">
+      <b>* Số Token Live:</b><br>
+      <div class="col-md-12">
+        <center>
+          <font color="green" size="50"><i class="fa fa-check"></i> <b id="success">0</b></font>
+        </center>
+      </div><br>
+
+      <b>* Số Token Die:</b><br>
+      <div class="col-md-12">
+        <center>
+          <font color="red" size="50"><i class="fa fa-check"></i> <b id="error">0</b></font>
+        </center>
+        <div class="col-sm-12">
+          <b>* List Token Lỗi:</b><br>
+          <textarea rows="3" class="form-control" id="listTokenFail"></textarea><br>
+        </div>
+        <div class="col-sm-12">
+          <b>* List Token Share Thất Bại:</b><br>
+          <textarea rows="3" class="form-control" id="listTokenShareError"></textarea><br>
+        </div>
+      </div><br>
+
+
+      <div class="page_tools ibox float-e-margins" id="html_auto_group_result" style="display:block;">
+
+        <div class="ibox-title">
+          <h5>Kết Quả</h5>
+        </div>
+        <div class="ibox-content">
+          <table id="example" class="table table-bordered table-hover">
+            <thead>
+              <tr>
+                <th width="5%">STT</th>
+                <th width="10%">IDProfile</th>
+                <th width="10%">TOKEN</th>
+                <th>GROUPS</th>
+                <th width="15%">List IDGROUP</th>
+                <th width="15%">List Shared</th>
+                <th width="5%">Thành công</th>
+                <th width="5%">Thất bại</th>
+                <th>Message</th>
+                <th width="5%">Action</th>
+
+              </tr>
+            </thead>
+            <tbody id="html_body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+
+  <script src="/scripts/console.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+
+  <script type="text/javascript" src="/client-dist/socket.io.min.js"></script>
+  <script type="text/javascript" src="/js/notify.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function () {
+      thanh = {
+        login: function (key, value, id) {
+          document.getElementById("button_" + id + "").disabled = true;
+          timeDelayLeave = $("#timeDelay").val();
+          $.each(TotalTokenLive, function (key, value) {
+            if (value.id == id) {
+              startSharePhongday12(value, 0);
+            }
+          });
+        }
+
+      }
+
+      TotalTokenLive = new Array();
+      ArrayPost = new Array();
+
+      $("#checkLive_ChiaGroups").click(function () {
+        $('#loadnewwindow').attr("disabled", true);
+        $('#btnNobita76').attr("disabled", true);
+
+        success = 0;
+        $("#success").text(success);
+        error = 0;
+        $("#error").text(error);
+
+        $("#html_body").html('');
+        listToken = $("#listToken").val().split('\n');
+        listLink = $("#listLink").val().split('\n');
+        messages = $("#messages").val();
+        messagesCMT = $("#messagesCMT").val();
+        limitGroup = $("#limitGroup").val();
+        timeDelay = $("#timeDelay").val();
+
+        methodShare = $("#methodShare").val();
+        listImage = $("#listImage").val();
+        haveFilter = $("#haveFilter").val();
+        haveCMT = $("#haveCMT").val();
+        haveCountMember = $("#haveCountMember").val();
+        idPost = $("#idPost").val();
+        TotalTokenGroups = new Array();
+        toastr.info('Tiến hành check live và chia groups', 'NMT');
+
+        $.each(listToken, function (key, value) {
+          $.get('https://graph.facebook.com/me?access_token=' + value).done(function (msg) {
+            $.get('https://graph.facebook.com/me/groups?fields=id&limit=' + limitGroup + '&access_token=' + value).done(function (phongday12) {
+              tbody = '', tbody += '<tr>', tbody += '  <td>' + (key + 1) + '</td>', tbody += '<td>' + msg.id + '</td>', tbody += '<td><input class="form-control" id="phongday12DOTme_' + msg.id + '" value="' + value + '"></td>', tbody += '<td id="groupsNobita76_' + msg.id + '">' + phongday12.data.length + '</td>', tbody += '<td><textarea class="form-control" id="totalGroups_' + msg.id + '"></textarea></td>', tbody += '<td><textarea class="form-control" id="Joined_' + msg.id + '"></textarea></td>', tbody += '<td><font color="green" id="success_' + msg.id + '">0</font></td>', tbody += '<td><font color="red" id="error_' + msg.id + '">0</font></td>', tbody += '<td><div id="message_' + msg.id + '">Đang chờ...!</div></td>', tbody += '<td><button type="button" class="btn btn-success" id="button_' + msg.id + '" onclick="thanh.login(\'' + key + '\',\'' + value + '\', \'' + msg.id + '\')">Share</button></td>', $('#html_body').append(tbody);
+              ++success;
+              $("#success").text(success);
+              $.each(phongday12.data, function (key, value) {
+                $('#totalGroups_' + msg.id + '').append(value.id + '\n');
+
+              });
+              TotalTokenLive.push({
+                id: msg.id,
+                token: value,
+                link: listLink[key],
+                groups: phongday12.data
+              })
+            });
+          }).error(function (errors) {
+            toastr.error('TOKEN số ' + (key + 1) + ' DIE', 'NMT');
+            ++error;
+            $("#error").text(error);
+          })
+          if ((key + 1) >= listToken.length) {
+            setTimeout(function () {
+              $('#postGR').attr("disabled", false);
+              $('#editGR').attr("disabled", false);
+              $('#cmtGR').attr("disabled", false);
+              toastr.success('Đã Check Live và GET Groups thành công', 'NMT');
+            }, 3000);
+          }
+        })
+      })
+
+      $("#postGR").click(function () {
+        messages = $("#messages").val().split('\n');
+        toastr.info('Có ' + TotalTokenLive.length + ' TOKEN LIVE mỗi TOKEN SHARE ' + limitGroup + '', 'NMT');
+
+        $.each(TotalTokenLive, (indexToken, dataToken) => {
+          $("#message_" + dataToken.id + "").html("<font color='blue'>Tiến hành đăng bài</font>");
+          $.each(dataToken.groups, (indexGr, dataGr) => {
+            createPost(dataToken.id, dataToken.token, dataGr.id, messages[0], (msgCreate) => {
+              ArrayPost.push({
+                ...dataToken,
+                story_id: msgCreate.split('"')[13],
+                idPost: msgCreate.split('"')[23]
+              })
+              countOK = Number($('#success_' + dataToken.id + '').text());
+              ++countOK; $("#success_" + dataToken.id + "").text(countOK);
+              $("#message_" + dataToken.id + "").html("<font color='green'>Post Thành công: " + msgCreate.split('"')[23] + "</font>");
+              $('#Joined_' + dataToken.id + '').append(msgCreate.split('"')[23] + '\n');
+            })
+          })
+        })
+      });
+
+
+      $("#editGR").click(function () {
+        messages = $("#messages").val().split('\n');
+
+        $.each(ArrayPost, (indexPost, dataPost) => {
+          FEED_COMPOSER(dataPost.token, dataPost.link, (msgFeed) => {
+            editPost(dataPost.id, dataPost.token, dataPost.story_id, JSON.stringify(msgFeed), messages[0], (msgEdit) => {
+              if (msgEdit.data.story_edit.story) {
+                $("#message_" + dataPost.id + "").html("<font color='green'>Edit Thành công: " + dataPost.idPost + "</font>");
+              }
+            })
+          })
+
+          if (indexPost + 1 == ArrayPost.length) {
+            $('#reload').attr("disabled", false);
+          }
+        })
+      });
+
+
+      $("#cmtGR").click(function () {
+        success = 0;
+        $("#success").text(success);
+        error = 0;
+        $("#error").text(error);
+        $("#html_body").html('');
+
+        cmt = $("#cmt").val().split('\n');
+        getPost = $("#getPost").val()
+        listToken = $("#listToken").val().split('\n');
+        luong = $("#luong").val()
+        limitGroup = $("#limitGroup").val();
+        const delayLuong = $('#delayLuong').val()
+        messages = $("#messages").val().split('\n');
+
+
+        const ArrayListToken = listToken.chunk(luong)
+
+        var indexLoopArrayListToken = 0
+        const loopArrayListToken = () => {
+          if (indexLoopArrayListToken < ArrayListToken.length) {
+            $("#html_body").html('');
+            toastr.info(`Bắt đầu chạy ${luong} con`, 'NMT');
+            check_chiaGR(ArrayListToken[indexLoopArrayListToken], limitGroup, (booleanMsg) => {
+              if (booleanMsg) {
+                $.each(TotalTokenLive, (indexToken, dataToken) => {
+                  $("#message_" + dataToken.id + "").html("<font color='blue'>Tiến hành Đăng Và CMT bài viết</font>");
+                  $.each(dataToken.groups, (indexGr, dataGr) => {
+                    createPost(dataToken.id, dataToken.token, dataGr.id, messages[0], (msgCreate) => {
+                      countOK = Number($('#success_' + dataToken.id + '').text());
+                      ++countOK; $("#success_" + dataToken.id + "").text(countOK);
+                      $("#message_" + dataToken.id + "").html("<font color='green'>Post Thành công: " + msgCreate.split('"')[23] + "</font>");
+                      $('#Joined_' + dataToken.id + '').append(msgCreate.split('"')[23] + '\n');
+                    })
+
+                    getPostGr(dataToken.id, dataToken.token, dataGr.id, getPost, (msgGetPost) => {
+                      if (msgGetPost.feed.data) {
+                        $.each(msgGetPost.feed.data, (indexGetPost, dataGetPost) => {
+                          cmtGr(dataGetPost.id.split('_')[1], dataToken.token, messageRewrite(cmt[0]), (msgCMT) => {
+                            countOK = Number($('#success_' + dataToken.id + '').text());
+                            ++countOK; $("#success_" + dataToken.id + "").text(countOK);
+                            $("#message_" + dataToken.id + "").html("<font color='green'>CMT Thành công: " + msgCMT.id.split('_')[1] + "</font>");
+                            $('#Joined_' + dataToken.id + '').append(msgCMT.id.split('_')[1] + '\n');
+                          })
+                        })
+                      }
+                    })
+                  })
+
+                  if (indexToken + 1 == TotalTokenLive.length) {
+                    setTimeout(() => {
+                      TotalTokenLive = []
+                      indexLoopArrayListToken++
+                      loopArrayListToken()
+                    }, delayLuong)
+                  }
+                })
+              }
+            })
+          } else {
+            toastr.info('Đã chạy xong tất cả', 'NMT');
+          }
+        }
+        loopArrayListToken()
+
+
+      });
+
+
+
+
+      $("#shareVideo").click(function () {
+        success = 0;
+        $("#success").text(success);
+        error = 0;
+        $("#error").text(error);
+        $("#html_body").html('');
+
+        cmt = $("#cmt").val().split('\n');
+        getPost = $("#getPost").val()
+        listToken = $("#listToken").val().split('\n');
+        luong = $("#luong").val()
+        limitGroup = $("#limitGroup").val();
+        const delayLuong = $('#delayLuong').val()
+        messages = $("#messages").val().split('\n');
+        listLink = $('#listLink').val().split('\n')
+
+
+
+        const ArrayListToken = listToken.chunk(luong)
+        // console.log(ArrayListToken)
+
+        var indexLoopArrayListToken = 0
+        const loopArrayListToken = () => {
+          if (indexLoopArrayListToken < ArrayListToken.length) {
+            $("#html_body").html('');
+            toastr.info(`Bắt đầu chạy ${luong} con`, 'NMT');
+            check_chiaGR(ArrayListToken[indexLoopArrayListToken], limitGroup, (booleanMsg) => {
+              if (booleanMsg) {
+                if (TotalTokenLive.length != 0) {
+                  $.each(TotalTokenLive, (indexToken, dataToken) => {
+                    $("#message_" + dataToken.id + "").html("<font color='blue'>Tiến hành Share</font>");
+                    startSharePhongday12(dataToken, "11", listLink[0], messages[0], delayLuong, (booleanShare) => {
+                      if (booleanShare) {
+
+                      }
+                    })
+
+
+                    if (indexToken + 1 == TotalTokenLive.length) {
+                      setTimeout(() => {
+                        TotalTokenLive = []
+                        indexLoopArrayListToken++
+                        loopArrayListToken()
+                      }, delayLuong)
+                    }
+                  })
+                } else {
+                  setTimeout(() => {
+                    TotalTokenLive = []
+                    indexLoopArrayListToken++
+                    loopArrayListToken()
+                  }, delayLuong)
+                }
+              }
+            })
+          } else {
+            toastr.info('Đã chạy xong tất cả', 'NMT');
+          }
+        }
+        loopArrayListToken()
+
+
+      });
+
+
+      $("#reload").click(function () {
+        $.each(ArrayPost, (indexPost, dataPost) => {
+          reload(dataPost.id, dataPost.token, dataPost.idPost, (share_data, share_id) => {
+            save(dataPost.id, dataPost.token, share_data, share_id)
+          })
+        })
+      });
+
+
+      const check_chiaGR = (listToken, limitGroup, callback) => {
+        listLink = $('#listLink').val().split('\n')
+
+        $.each(listToken, function (key, value) {
+          $.get('https://graph.facebook.com/me?access_token=' + value).done(function (msg) {
+            $.get('https://graph.facebook.com/me/groups?fields=id&limit=' + limitGroup + '&access_token=' + value).done(function (phongday12) {
+              tbody = '', tbody += '<tr>', tbody += '  <td>' + (key + 1) + '</td>', tbody += '<td>' + msg.id + '</td>', tbody += '<td><input class="form-control" id="phongday12DOTme_' + msg.id + '" value="' + value + '"></td>', tbody += '<td id="groupsNobita76_' + msg.id + '">' + phongday12.data.length + '</td>', tbody += '<td><textarea class="form-control" id="totalGroups_' + msg.id + '"></textarea></td>', tbody += '<td><textarea class="form-control" id="Joined_' + msg.id + '"></textarea></td>', tbody += '<td><font color="green" id="success_' + msg.id + '">0</font></td>', tbody += '<td><font color="red" id="error_' + msg.id + '">0</font></td>', tbody += '<td><div id="message_' + msg.id + '">Đang chờ...!</div></td>', tbody += '<td><button type="button" class="btn btn-success" id="button_' + msg.id + '" onclick="thanh.login(\'' + key + '\',\'' + value + '\', \'' + msg.id + '\')">Share</button></td>', $('#html_body').append(tbody);
+              ++success;
+              $("#success").text(success);
+              $.each(phongday12.data, function (key, value) {
+                $('#totalGroups_' + msg.id + '').append(value.id + '\n');
+
+              });
+              TotalTokenLive.push({
+                id: msg.id,
+                token: value,
+                link: listLink[key],
+                groups: phongday12.data
+              })
+            });
+          }).error(function (errors) {
+            toastr.error('TOKEN số ' + (key + 1) + ' DIE', 'NMT');
+            ++error;
+            $("#error").text(error);
+            $("#listTokenFail").append(value + '\n')
+          })
+          if ((key + 1) >= listToken.length) {
+            setTimeout(function () {
+              callback(true)
+              toastr.success('Đã Check Live và GET Groups thành công', 'NMT');
+            }, 1000);
+          }
+        })
+      }
+    });
+
+
+    const createPost = (accID, token, grID, message, callback) => {
+      $.get(`https://graph.facebook.com/graphql?method=post&locale=vi_VN&pretty=false&format=json&fb_api_req_friendly_name=ComposerStoryCreateMutation&doc_id=5095749477168251&fb_api_caller_class=RelayModern&server_timestamps=true&variables={"input":{"composer_entry_point":"inline_composer","composer_source_surface":"group","composer_type":"group","source":"WWW","attachments":[],"message":{"ranges":[],"text":"${message}"},"with_tags_ids":[],"inline_activities":[],"explicit_place_id":"0","text_format_preset_id":"0","navigation_data":{"attribution_id_v2":"CometGroupDiscussionRoot.react,comet.group,unexpected,1650881272082,309755,2361831622;GroupsCometCrossGroupFeedRoot.react,comet.groups.feed,tap_bookmark,1650881266153,436876,2361831622"},"tracking":[null],"audience":{"to_id":"${grID}"},"actor_id":"${accID}","client_mutation_id":"20"},"displayCommentsFeedbackContext":null,"displayCommentsContextEnableComment":null,"displayCommentsContextIsAdPreview":null,"displayCommentsContextIsAggregatedShare":null,"displayCommentsContextIsStorySet":null,"feedLocation":"GROUP","feedbackSource":0,"focusCommentID":null,"gridMediaWidth":null,"groupID":null,"scale":1,"privacySelectorRenderLocation":"COMET_STREAM","renderLocation":"group","useDefaultActor":false,"inviteShortLinkKey":null,"isFeed":false,"isFundraiser":false,"isFunFactPost":false,"isGroup":true,"isEvent":false,"isTimeline":false,"isSocialLearning":false,"isPageNewsFeed":false,"isProfileReviews":false,"isWorkSharedDraft":false,"UFI2CommentsProvider_commentsKey":"CometGroupDiscussionRootSuccessQuery","hashtag":null,"canUserManageOffers":false}&access_token=${token}`).done(msg => {
+        callback(msg)
+      })
+    }
+
+
+    const editPost = (accId, token, story_id, share_scrape_data, message, callback) => {
+      $.get(`https://graph.facebook.com/graphql?method=post&locale=vi_VN&pretty=false&format=json&fb_api_req_friendly_name=ComposerStoryEditMutation&doc_id=5369316033113787&fb_api_caller_class=RelayModern&server_timestamps=true&variables={"input":{"composer_entry_point":"inline_composer","composer_source_surface":"group","composer_type":"edit","story_id":"${story_id}","attachments":[{"link":{"share_scrape_data":${share_scrape_data}}}],"message":{"ranges":[],"text":"${message}"},"with_tags_ids":[],"inline_activities":[],"explicit_place_id":"0","text_format_preset_id":"0","editable_post_feature_capabilities":["CONTAINED_LINK","CONTAINED_MEDIA","POLL"],"actor_id":"${accId}","client_mutation_id":"1"},"displayCommentsFeedbackContext":null,"displayCommentsContextEnableComment":null,"displayCommentsContextIsAdPreview":null,"displayCommentsContextIsAggregatedShare":null,"displayCommentsContextIsStorySet":null,"feedLocation":"GROUP","feedbackSource":1,"focusCommentID":null,"scale":1.5,"privacySelectorRenderLocation":"COMET_STREAM","renderLocation":"group","useDefaultActor":false,"UFI2CommentsProvider_commentsKey":null,"isGroupViewerContent":false,"isSocialLearning":false,"isWorkDraftFor":false}&access_token=${token}`).done(msg => {
+        callback(msg)
+      })
+    }
+
+    function FEED_COMPOSER(token, link, callback) {
+      $.get('https://graph.facebook.com/graphql?doc_id=3756752591107001&method=post&locale=vi_VN&pretty=false&format=json&variables={"feedLocation":"FEED_COMPOSER","focusCommentID":null,"goodwillCampaignId":"","goodwillCampaignMediaIds":[],"params":{"url":"' + link + '"},"privacySelectorRenderLocation":"COMET_COMPOSER","renderLocation":"composer_preview","parentStoryID":null,"scale":1,"useDefaultActor":false,"shouldIncludeStoryAttachment":false}&fb_api_req_friendly_name=ComposerLinkAttachmentPreviewQuery&fb_api_caller_class=graphservice&server_timestamps=true&access_token=' + token).then(function (data) {
+        callback(data.data.link_preview.share_scrape_data);
+      });
+    };
+
+    const getPostGr = (accID, token, uidgroup, soluong, callback) => {
+      $.get(`https://graph.facebook.com/v12.0/${uidgroup}?fields=feed.limit(${soluong}){${accID}}&access_token=${token}`).done(msg => {
+        callback(msg)
+      })
+    }
+
+    const cmtGr = (idPost, token, messageCMT, callback) => {
+      $.get(`https://graph.facebook.com/${idPost}/comments?access_token=${token}&method=post&message=${messageCMT}`).done(msg => {
+        callback(msg)
+      })
+    }
+
+    const shareVideo = (accID, token, idGroup, idShare, message, callback) => {
+      $.get(`https://graph.facebook.com/graphql?method=post&locale=vi_VN&pretty=false&format=json&fb_api_req_friendly_name=ComposerStoryCreateMutation&doc_id=4578149278952227&fb_api_caller_class=RelayModern&server_timestamps=true&variables={"input":{"composer_entry_point":"inline_composer","composer_source_surface":"group","composer_type":"group","source":"WWW","is_tracking_encrypted":true,"tracking":[null],"attachments":[{"link":{"share_scrape_data":"{\"share_type\":22,\"share_params\":[${idShare}]}"}}],"message":{"ranges":[],"text":"${message}"},"with_tags_ids":[],"inline_activities":[],"explicit_place_id":"0","text_format_preset_id":"0","navigation_data":{"attribution_id_v2":"CometVideoHomeNewPermalinkRoot.react,comet.watch.injection,via_cold_start,1651487828956,135907,2392950137"},"audience":{"to_id":"${idGroup}"},"actor_id":"${accID}","client_mutation_id":"1"},"displayCommentsFeedbackContext":null,"displayCommentsContextEnableComment":null,"displayCommentsContextIsAdPreview":null,"displayCommentsContextIsAggregatedShare":null,"displayCommentsContextIsStorySet":null,"feedLocation":"GROUP","feedbackSource":0,"focusCommentID":null,"gridMediaWidth":null,"groupID":null,"scale":1.5,"privacySelectorRenderLocation":"COMET_STREAM","renderLocation":"group","useDefaultActor":false,"inviteShortLinkKey":null,"isFeed":false,"isFundraiser":false,"isFunFactPost":false,"isGroup":true,"isEvent":false,"isTimeline":false,"isSocialLearning":false,"isPageNewsFeed":false,"isProfileReviews":false,"isWorkSharedDraft":false,"UFI2CommentsProvider_commentsKey":null,"hashtag":null,"canUserManageOffers":false}&access_token=${token}`).done(msg => {
+        callback(msg)
+      })
+    }
+
+
+    const reload = (accId, token, post_id_str, callback) => {
+      $.get(`https://graph.facebook.com/graphql?method=post&locale=vi_VN&pretty=false&format=json&fb_api_req_friendly_name=CometRefreshShareAttachmentDialogQuery&doc_id=5033765496641902&fb_api_caller_class=RelayModern&server_timestamps=true&variables={"feedLocation":"FEED_COMPOSER","postID":"${post_id_str}","privacySelectorRenderLocation":"COMET_COMPOSER","renderLocation":"composer_preview","scale":1,"useDefaultActor":false}&access_token=${token}`).done((msg) => {
+        $("#message_" + accId + "").html("<font color='green'>Reload Thành công: " + post_id_str + "</font>");
+        callback(msg.data.fetch_refreshed_share_attachment.share_data, msg.data.fetch_refreshed_share_attachment.share_id)
+      }).error(() => {
+        $("#message_" + accId + "").html("<font color='red'>Reload thất bại: " + post_id_str + "</font>");
+      })
+    }
+
+    const save = (actor_id, token, share_data, share_id) => {
+      console.log(share_id)
+      $.get(`https://graph.facebook.com/graphql?method=post&locale=vi_VN&pretty=false&format=json&fb_api_req_friendly_name=CometRefreshShareAttachmentDialogRefreshMutation&doc_id=4553318731442087&fb_api_caller_class=RelayModern&server_timestamps=true&variables={"input":{"client_mutation_id":"1","actor_id":"${actor_id}","share_data":"${share_data}","share_id":"${share_id}","story_id":"UzpfSTEwMDAyMTk1OTcxNzY0NDoxMTg4NTQxNzA1MjIxMTQy"},"scale":1}&access_token=${token}`).done(() => {
+        $("#message_" + actor_id + "").html("<font color='green'>Save Thành công: " + share_id + "</font>");
+      }).error(() => {
+        $("#message_" + actor_id + "").html("<font color='red'>Save thất bại: " + share_id + "</font>");
+      })
+    }
+
+    Object.defineProperty(Array.prototype, 'chunk_inefficient', {
+      value: function (chunkSize) {
+        var array = this;
+        return [].concat.apply([],
+          array.map(function (elem, i) {
+            return i % chunkSize ? [] : [array.slice(i, i + chunkSize)];
+          })
+        );
+      }
+    });
+
+    Array.prototype.chunk = function (n) {
+      if (!this.length) {
+        return [];
+      }
+      return [this.slice(0, n)].concat(this.slice(n).chunk(n));
+    };
+
+
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    let icons = '😀 😃 😄 😁 😆 😅 😂 🤣 ☺ 😊 😇 🙂 🙃 😉 😌 😍 😘 😗 😙 😚 😋 😜 😝 😛 🤑 🤗 🤓 😎 🤡 🤠 😏 😒 😞 😔 😟 😕 🙁 ☹ 😣 😖 😫 😩 😤 😠 😡 😶 😐 😑 😯 😦 😧 😮 😲 😵 😳 😱 😨 😰 😢 😥 🤤 😭 😓 😪 😴 🙄 🤔 🤥 😬 🤐 🤢 🤧 😷 🤒 🤕 😈 👿 👹 👺 💩 👻 💀 ☠ 👽 👾 🤖 🎃 😺 😸 😹 😻 😼 😽 🙀 😿 😾 👐 🙌 👏 🙏 🤝 👍 👎 👊 ✊ 🤛 🤜 🤞 ✌ 🤘 👌 👈 👉 👆 👇 ☝ ✋ 🤚 🖐 🖖 👋 🤙 💪 🖕 ✍ 🤳 💅 💍 💄 💋 👄 👅 👂 👃 👣 👁 👀 🗣 👤 👥 👶 👦 👧 👨 👩 👱 👴 👵 👲 👳 👮 👷 💂 🕵 🤶 🎅 👸 🤴 👰 🤵 👼 🤰 🙇 💁 🙅 🙆 🙋 🙎 🙍 💇 💆 🕴 💃 🕺 👯 🚶 🏃 👫 👭 👬 💑 👩‍ ❤️‍ 👩 👨‍ ❤️‍ 👨 💏 👩‍ ❤️‍ 💋‍ 👩 👨‍ ❤️‍ 💋‍ 👨 👪 👨‍ 👩‍ 👧 👨‍ 👩‍ 👧‍ 👦 👨‍ 👩‍ 👦‍ 👦 👨‍ 👩‍ 👧‍ 👧 👩‍ 👩‍ 👦 👩‍ 👩‍ 👧 👩‍ 👩‍ 👧‍ 👦 👩‍ 👩‍ 👦‍ 👦 👩‍ 👩‍ 👧‍ 👧 👨‍ 👨‍ 👦 👨‍ 👨‍ 👧 👨‍ 👨‍ 👧‍ 👦 👨‍ 👨‍ 👦‍ 👦 👨‍ 👨‍ 👧‍ 👧 👚 👕 👖 👔 👗 👙 👘 👠 👡 👢 👞 👟 👒 🎩 🎓 👑 ⛑ 🎒 👝 👛 👜 💼 👓 🕶 🌂 ☂ ❤ 💛 💚 💙 💜 🖤 💔 ❣ 💕 💞 💓 💗 💖 💘 💝 💟 🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐽 🐸 🐵 🙈 🙉 🙊 🐒 🐔 🐧 🐦 🐤 🐣 🐥 🦆 🦅 🦉 🦇 🐺 🐗 🐴 🦄 🐝 🐛 🦋 🐌 🐚 🐞 🐜 🕷 🕸 🐢 🐍 🦎 🦂 🦀 🦑 🐙 🦐 🐠 🐟 🐡 🐬 🦈 🐳 🐋 🐊 🐆 🐅 🐃 🐂 🐄 🦌 🐪 🐫 🐘 🦏 🦍 🐎 🐖 🐐 🐏 🐑 🐕 🐩 🐈 🐓 🦃 🕊 🐇 🐁 🐀 🐿 🐾 🐉 🐲 🌵 🎄 🌲 🌳 🌴 🌱 🌿 ☘ 🍀 🎍 🎋 🍃 🍂 🍁 🍄 🌾 💐 🌷 🌹 🥀 🌻 🌼 🌸 🌺 🌎 🌍 🌏 🌕 🌖 🌗 🌘 🌑 🌒 🌓 🌔 🌚 🌝 🌞 🌛 🌜 🌙 💫 ⭐ 🌟 ✨ ⚡ 🔥 💥 ☄ ☀ 🌤 ⛅ 🌥 🌦 🌈 ☁ 🌧 ⛈ 🌩 🌨 ☃ ⛄ ❄ 🌬 💨 🌪 🌫 🌊 💧 💦 ☔ 🍏 🍎 🍐 🍊 🍋 🍌 🍉 🍇 🍓 🍈 🍒 🍑 🍍 🥝 🥑 🍅 🍆 🥒 🥕 🌽 🌶 🥔 🍠 🌰 🥜 🍯 🥐 🍞 🥖 🧀 🥚 🍳 🥓 🥞 🍤 🍗 🍖 🍕 🌭 🍔 🍟 🥙 🌮 🌯 🥗 🥘 🍝 🍜 🍲 🍥 🍣 🍱 🍛 🍚 🍙 🍘 🍢 🍡 🍧 🍨 🍦 🍰 🎂 🍮 🍭 🍬 🍫 🍿 🍩 🍪 🥛 🍼 ☕ 🍵 🍶 🍺 🍻 🥂 🍷 🥃 🍸 🍹 🍾 🥄 🍴 🍽 ⚽ 🏀 🏈 ⚾ 🎾 🏐 🏉 🎱 🏓 🏸 🥅 🏒 🏑 🏏 ⛳ 🏹 🎣 🥊 🥋 ⛸ 🎿 ⛷ 🏂 🏋 🤺 ⛹ 🏌 🏄 🏊 🚣 🏇 🚴 🚵 🎽 🏅 🎖 🥇 🥈 🥉 🏆 🏵 🎗 🎫 🎟 🎪 🎭 🎨 🎬 🎤 🎧 🎼 🎹 🥁 🎷 🎺 🎸 🎻 🎲 🎯 🎳 🎮 🎰 🚗 🚕 🚙 🚌 🚎 🏎 🚓 🚑 🚒 🚐 🚚 🚛 🚜 🛴 🚲 🛵 🏍 🚨 🚔 🚍 🚘 🚖 🚡 🚠 🚟 🚃 🚋 🚞 🚝 🚄 🚅 🚈 🚂 🚆 🚇 🚊 🚉 🚁 🛩 ✈ 🛫 🛬 🚀 🛰 💺 🛶 ⛵ 🛥 🚤 🛳 ⛴ 🚢 ⚓ 🚧 ⛽ 🚏 🚦 🚥 🗺 🗿 🗽 ⛲ 🗼 🏰 🏯 🏟 🎡 🎢 🎠 ⛱ 🏖 🏝 ⛰ 🏔 🗻 🌋 🏜 🏕 ⛺ 🛤 🛣 🏗 🏭 🏠 🏡 🏘 🏚 🏢 🏬 🏣 🏤 🏥 🏦 🏨 🏪 🏫 🏩 💒 🏛 ⛪ 🕌 🕍 🕋 ⛩ 🗾 🎑 🏞 🌅 🌄 🌠 🎇 🎆 🌇 🌆 🏙 🌃 🌌 🌉 🌁 ⌚ 📱 📲 💻 ⌨ 🖥 🖨 🖱 🖲 🕹 🗜 💽 💾 💿 📀 📼 📷 📸 📹 🎥 📽 🎞 📞 ☎ 📟 📠 📺 📻 🎙 🎚 🎛 ⏱ ⏲ ⏰ 🕰 ⌛ ⏳ 📡 🔋 🔌 💡 🔦 🕯 🗑 🛢 💸 💵 💴 💶 💷 💰 💳 💎 ⚖ 🔧 🔨 ⚒ 🛠 ⛏ 🔩 ⚙ ⛓ 🔫 💣 🔪 🗡 ⚔ 🛡 🚬 ⚰ ⚱ 🏺 🔮 📿 💈 ⚗ 🔭 🔬 🕳 💊 💉 🌡 🚽 🚰 🚿 🛁 🛀 🛎 🔑 🗝 🚪 🛋 🛏 🛌 🖼 🛍 🛒 🎁 🎈 🎏 🎀 🎊 🎉 🎎 🏮 🎐 ✉ 📩 📨 📧 💌 📥 📤 📦 🏷 📪 📫 📬 📭 📮 📯 📜 📃 📄 📑 📊 📈 📉 🗒 🗓 📆 📅 📇 🗃 🗳 🗄 📋 📁 📂 🗂 🗞 📰 📓 📔 📒 📕 📗 📘 📙 📚 📖 🔖 🔗 📎 🖇 📐 📏 📌 📍 ✂ 🖊 🖋 ✒ 🖌 🖍 📝 ✏ 🔍 🔎 🔏 🔐 🔒 🔓 ☮ ✝ ☪ 🕉 ☸ ✡ 🔯 🕎 ☯ ☦ 🛐 ⛎ ♈ ♉ ♊ ♋ ♌ ♍ ♎ ♏ ♐ ♑ ♒ ♓ 🆔 ⚛ 🉑 ☢ ☣ 📴 📳 🈶 🈚 🈸 🈺 🈷 ✴ 🆚 💮 🉐 ㊙ ㊗ 🈴 🈵 🈹 🈲 🅰 🅱 🆎 🆑 🅾 🆘 ❌ ⭕ 🛑 ⛔ 📛 🚫 💯 💢 ♨ 🚷 🚯 🚳 🚱 🔞 📵 🚭 ❗ ❕ ❓ ❔ ‼ ⁉ 🔅 🔆 〽 ⚠ 🚸 🔱 ⚜ 🔰 ♻ ✅ 🈯 💹 ❇ ✳ ❎ 🌐 💠 Ⓜ 🌀 💤 🏧 🚾 ♿ 🅿 🈳 🈂 🛂 🛃 🛄 🛅 🚹 🚺 🚼 🚻 🚮 🎦 📶 🈁 🔣 ℹ 🔤 🔡 🔠 🆖 🆗 🆙 🆒 🆕 🆓 0⃣ 1⃣ 2⃣ 3⃣ 4⃣ 5⃣ 6⃣ 7⃣ 8⃣ 9⃣ 🔟 🔢 #⃣ *⃣ ▶ ⏸ ⏯ ⏹ ⏺ ⏭ ⏮ ⏩ ⏪ ⏫ ⏬ ◀ 🔼 🔽 ➡ ⬅ ⬆ ⬇ ↗ ↘ ↙ ↖ ↕ ↔ ↪ ↩ ⤴ ⤵ 🔀 🔁 🔂 🔄 🔃 🎵 🎶 ➕ ➖ ➗ ✖ 💲 💱 ™ © ® 〰 ➰ ➿ 🔚 🔙 🔛 🔝 🔜 ✔ ☑ 🔘 ⚪ ⚫ 🔴 🔵 🔺 🔻 🔸 🔹 🔶 🔷 🔳 🔲 ▪ ▫ ◾ ◽ ◼ ◻ ⬛ ⬜ 🔈 🔇 🔉 🔊 🔔 🔕 📣 📢 👁 ‍ 🗨 💬 💭 🗯 ♠ ♣ ♥ ♦ 🃏 🎴 🀄 🕐 🕑 🕒 🕓 🕔 🕕 🕖 🕗 🕘 🕙 🕚 🕛 🕜 🕝 🕞 🕟 🕠 🕡 🕢 🕣 🕤 🕥 🕦 🕧 🏳 🏴 🏁 🚩 🏳 ‍🌈'.split(
+      ' '
+    );
+
+    Array.prototype.sample = function () {
+      return this[Math.floor(Math.random() * this.length)];
+    }
+
+    function sample_1(x) {
+      return x.sample();
+    }
+
+    function messageRewrite(msg) {
+      return msg
+        .replace(/\((.*?)\)/g, (__, v) => {
+          return sample_1(v.split('|'))
+        })
+        .replace(/\@icon/g, () => {
+          return sample_1(icons)
+        })
+    };
+
+
+    function startSharePhongday12(data, methodShare, idPost, message, delayLuong, callback) {
+
+      $.each(data.groups, function (key, value) {
+        checkKiemDuyet(value.id, data.token, (booleanKiemDuyet) => {
+          if (booleanKiemDuyet) {
+            $("#message_" + data.id + "").html("<font color='green'>Tiến hành SHARE: " + value.id + "</font>");
+
+            var phongday12 = { "input": { "attachments": [{ "link": { "share_scrape_data": "{\"share_type\":" + methodShare + ",\"share_params\":[" + idPost + "]}" } }], "audience": { "to_id": "" + value.id + "" }, "message": { "text": "" + message + "" }, "source": "WWW", "tracking": [null], "actor_id": "" + data.id + "", "client_mutation_id": "2" } }
+
+
+
+            $.get('https://graph.facebook.com/graphql?doc_id=2633393936722327&method=post&locale=vi_VN&pretty=false&format=json&variables=' + JSON.stringify(phongday12) + '&fb_api_req_friendly_name=CometReshareStoryCreateMutation&fb_api_caller_class=RelayModern&server_timestamps=true&access_token=' + data.token).done(function (msg) {
+              if (msg.data.story_create == null) {
+                $("#message_" + data.id + "").html("<font color='red'>Thất bại: " + value.id + "</font>");
+                countERROR = Number($('#error_' + data.id + '').text());
+                ++countERROR; $("#error_" + data.id + "").text(countERROR);
+              } else {
+                var id = atob(msg.data.story_create.story.id).split(':VK:')[1];
+                $("#message_" + data.id + "").html("<font color='green'>Thành công: " + value.id + "</font>");
+                $('#Joined_' + data.id + '').append(id + '\n');
+
+                countOK = Number($('#success_' + data.id + '').text());
+                ++countOK; $("#success_" + data.id + "").text(countOK);
+                // if (haveCMT == 1) {
+                //   commentsNobita76dotMe(value.id + '_' + id, data, function (stt, message) {
+                //     $("#message_" + data.id).html(message);
+                //   })
+                // }
+
+              }
+
+            }).error(function () {
+              $("#message_" + data.id + "").html("<font color='red'>Thất bại: " + value.id + " [TOKEN DIE]</font>");
+              countERROR = Number($('#error_' + data.id + '').text());
+              ++countERROR; $("#error_" + data.id + "").text(countERROR);
+
+            })
+            if ((key + 1) >= data.groups.length) {
+              setTimeout(function () {
+                callback(true)
+                gioihanthatbai = $('#gioihanthatbai').val();
+                countERROR = Number($('#error_' + data.id + '').text());
+                if (countERROR >= 5) {
+                  $("#listTokenShareError").append(data.token + '\n')
+                }
+              }, delayLuong);
+            }
+          }
+        })
+      })
+
+    }
+
+
+    const checkKiemDuyet = (idGR, token, callback) => {
+      $.get(`https://graph.facebook.com/graphql?q=node(${idGR}){group_members{count},name,viewer_join_state,viewer_post_status,visibility_sentence{text},requires_admin_membership_approval}&access_token=${token}`).done(msg => {
+        if (msg[idGR].viewer_post_status == 'CAN_POST_WITHOUT_APPROVAL') {
+          callback(true)
+        }
+      })
+    }
+
+    function startPostImageNobta76(data, stt) {
+      $.each(data.groups, function (key, value) {
+        setTimeout(function () {
+          $("#message_" + data.id + "").html("<font color='green'>Tiến hành POST IMAGE: " + value.id + "</font>");
+
+          $.get('https://graph.facebook.com/' + value.id + '/photos?method=POST&message=' + messageRewrite(messages) + '&link=&url=' + messageRewrite(listImage) + '&access_token=' + data.token + '&pretty=0&sdk=joey').done(function (msg) {
+            console.log(msg);
+            $("#message_" + data.id + "").html("<font color='green'>Thành công: " + value.id + "</font>");
+            $('#Joined_' + data.id + '').append(msg.post_id + '\n');
+
+            countOK = Number($('#success_' + data.id + '').text());
+            ++countOK; $("#success_" + data.id + "").text(countOK);
+            if (haveCMT == 1) {
+              commentsNobita76dotMe(msg.post_id, data, function (stt, message) {
+                $("#message_" + data.id).html(message);
+              })
+            }
+          }).error(function () {
+            $("#message_" + data.id + "").html("<font color='red'>Thất bại: " + value.id + "</font>");
+            countERROR = Number($('#error_' + data.id + '').text());
+            ++countERROR; $("#error_" + data.id + "").text(countERROR);
+          })
+          if ((key + 1) >= data.groups.length) {
+            setTimeout(function () {
+              $('#button_' + data.id + '').attr("disabled", false);
+              $("#message_" + data.id + "").html("<font color='green'>Đã chạy xong!</font>");
+              toastr.success('[' + data.id + '] đã chạy xong', 'NMT');
+            }, 5000);
+          }
+        }, key * timeDelay);
+      })
+    }
+
+
+    function commentsNobita76dotMe(idPost, data, callback) {
+      $.get('https://graph.facebook.com/' + idPost + '/comments?method=post&message=' + messageRewrite(messagesCMT) + '&access_token=' + data.token).done(function (msg) {
+        callback(true, "CMT thành công: " + msg.id);
+      }).error(function () {
+        callback(false, "CMT thất bại " + idPost);
+      })
+    }
+
+    function actionFilterNobita76(data, action) {
+      console.log(data);
+      $("#message_" + data.id).html("Tiến hành lọc GR");
+      var nobita76arr = new Array();
+      $.each(data.groups, function (nobita76, nobita76v) {
+        setTimeout(function () {
+          $.get('https://graph.facebook.com/graphql?q=node(' + nobita76v.id + '){group_members{count},name,viewer_join_state,viewer_post_status,visibility_sentence{text},requires_admin_membership_approval}&access_token=' + data.token).done(function (msg) {
+            if (msg[nobita76v.id].viewer_post_status == "CAN_POST_WITHOUT_APPROVAL") {
+              nobita76arr.push([nobita76v, msg[nobita76v.id].group_members.count]);
+            }
+          }).error(function () {
+            $("#message_" + data.id).html("Lỗi check kiểm duyệt: " + nobita76v.id + "");
+          });
+          if ((nobita76 + 1) >= data.groups.length) {
+            setTimeout(function () {
+              if (haveCountMember == 1) {
+                $("#message_" + data.id).html("Đang sắp xếp từ bé đến thấp")
+                nobita76arr.sort(function (a, b) {
+                  return b[1] - a[1];
+                });
+                var thanh = new Array();
+                $.each(nobita76arr, function (key, value) {
+                  var nobita76task = {
+                    id: value[0].id
+                  }
+                  thanh.push(nobita76task);
+                });
+                nobita76arr = thanh;
+              } else {
+                var thanh = new Array();
+                $.each(nobita76arr, function (key, value) {
+                  var nobita76task = {
+                    id: value[0].id
+                  }
+                  thanh.push(nobita76task);
+                });
+                nobita76arr = thanh;
+              }
+              data.groups = nobita76arr;
+              $("#groupsNobita76_" + data.id).html(data.groups.length);
+              $("#message_" + data.id).html("Tiến hành chạy, có " + data.groups.length + " Groups");
+              if (action == 'share') {
+                startSharePhongday12(data, 0);
+              } else {
+                startPostImageNobta76(data, 0);
+              }
+            }, 5000);
+          }
+        }, nobita76 * 50);
+      })
+    }
+
+
+
+
+
+
+
+
+
+  </script>
+
+</body>
+
+</html>
